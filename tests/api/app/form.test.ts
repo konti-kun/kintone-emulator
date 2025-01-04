@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { KintoneRestAPIClient } from "@kintone/rest-api-client";
 
-test("アプリにフィールドを追加する", async () => {
+test("アプリにフィールドを追加し、確認し、削除できる", async () => {
   await fetch("http://localhost:3000/initialize", {
     method: "POST",
   });
@@ -33,5 +33,12 @@ test("アプリにフィールドを追加する", async () => {
     code: "test",
     label: "Test",
     noLabel: false,
+  });
+  await client.app.deleteFormFields({
+    app: 1,
+    fields: ["test"],
+  });
+  expect(await client.app.getFormFields({ app: 1 })).toEqual({
+    properties: {},
   });
 });

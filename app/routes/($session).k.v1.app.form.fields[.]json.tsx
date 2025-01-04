@@ -1,8 +1,9 @@
 import { ActionFunctionArgs } from "@remix-run/node";
 import { all, dbSession } from "~/utils/db.server";
+import type { KintoneRecordField } from '@kintone/rest-api-client';
 
 type Property = {
-  type: string;
+  type: KintoneRecordField.OneOf['type'];
   code: string;
   label: string;
   noLabel: boolean;

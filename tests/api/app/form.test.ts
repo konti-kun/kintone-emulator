@@ -2,6 +2,9 @@ import { expect, test } from "vitest";
 import { KintoneRestAPIClient } from "@kintone/rest-api-client";
 
 test("アプリにフィールドを追加する", async () => {
+  await fetch("http://localhost:3000/initialize", {
+    method: "POST",
+  });
   const client = new KintoneRestAPIClient({
     baseUrl: "http://localhost:3000",
     auth: {

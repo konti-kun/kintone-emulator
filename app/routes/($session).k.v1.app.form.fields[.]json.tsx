@@ -10,10 +10,12 @@ type Property = {
 }
 
 export async function loader({
+  request,
   params,
 }: ActionFunctionArgs) {
   const db = dbSession(params.session);
-  const result = await all<Property>(db, `SELECT code, type, label FROM fields WHERE app_id = ?`, 1);
+  const url = new URL(request.url);
+  const result = await all<Property>(db, `SELECT code, type, label FROM fields WHERE app_id = ?`, Number(url.searchParams.get('app')));
 
   const properties: {
     [key: string]: Property

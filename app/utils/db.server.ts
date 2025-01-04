@@ -4,6 +4,17 @@ import sqlite3 from "sqlite3";
 export const dbSession = (session?: string) =>
   singleton(session ?? "sqlite", () => new sqlite3.Database(":memory:"));
 
+export const serialize = (
+  db: sqlite3.Database,
+  callback: () => Promise<void> | void
+) =>
+  new Promise<void>((resolve) => {
+    db.serialize(() => {
+      callback();
+      resolve();
+    });
+  });
+
 export const run = (db: sqlite3.Database, sql: string, ...params: unknown[]) =>
   new Promise<void>((resolve, reject) => {
     db.run(sql, params, (err) => {

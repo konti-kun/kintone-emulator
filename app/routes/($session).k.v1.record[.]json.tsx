@@ -25,9 +25,9 @@ export const loader = async ({
   return Response.json({ record: body });
 }
 
-export const action = async ({ request }: ActionFunctionArgs) => {
+export const action = async ({ request, params }: ActionFunctionArgs) => {
   const body = await request.json();
-  const db = dbSession(body.session);
+  const db = dbSession(params.session);
   await run(db, "INSERT INTO records (app_id, body) VALUES (?, ?)", body.app, JSON.stringify(body.record));
   return Response.json({
     id: 1,

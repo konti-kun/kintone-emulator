@@ -1,5 +1,5 @@
 import { ActionFunctionArgs } from "@remix-run/node";
-import { dbSession } from "~/utils/db.server";
+import { dbSession, serialize } from "~/utils/db.server";
 
 const sql = `
 INSERT INTO fields (app_id, type, code, label) VALUES (?, ?, ?, ?)
@@ -16,7 +16,7 @@ export async function action({
   switch (method) {
     case 'POST': {
       const requestData = await request.json();
-      db.serialize(() => {
+      await serialize(db, () => {
         for (const key in requestData.properties) {
           db.run(sql, requestData.app, requestData.properties[key].type, key, requestData.properties.test.label);
         }
@@ -34,7 +34,7 @@ export async function action({
           json[key] = value;
         }
       }
-      db.serialize(() => {
+      await serialize(db, () => {
         for (const code of json.fields) {
           db.run('DELETE FROM fields WHERE app_id = ? AND code = ?', json.app, code);
         }

@@ -6,10 +6,10 @@ export async function action({ params }: ActionFunctionArgs) {
   const db = dbSession(params.session);
   await serialize(db, () => {
     db.run(
-      "CREATE TABLE IF NOT EXISTS fields (id INTEGER PRIMARY KEY, app_id INTEGER, type TEXT, code TEXT unique, label TEXT)",
+      "DROP TABLE fields",
     );
     db.run(
-      "CREATE TABLE IF NOT EXISTS records (id INTEGER PRIMARY KEY, app_id INTEGER, body JSON)",
+      "DROP TABLE records"
     );
   });
 

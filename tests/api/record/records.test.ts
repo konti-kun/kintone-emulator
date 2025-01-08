@@ -71,6 +71,30 @@ describe("アプリのレコード一覧のAPI", () => {
     expect(records.records[0].test.type).toEqual("SINGLE_LINE_TEXT");
   });
 
+  test("fieldsを指定するとそこのデータだけ出力される", async () => {
+    await Promise.all([
+      client!.record.addRecord({
+        app: 1,
+        record: {
+          test: {
+            value: "test",
+          },
+          test2: {
+            value: "test",
+          },
+          postedAt: {
+            value: "2022-01-01T00:00:00Z",
+          },
+        },
+      }),
+    ]);
+    const records = await client!.record.getRecords({
+      app: 1,
+      fields: ["test"],
+    });
+    expect(records.records[0]).not.toHaveProperty("test2");
+  });
+
   describe("queryが存在する時、", () => {
     beforeEach(async () => {
       await Promise.all([
@@ -130,6 +154,21 @@ describe("アプリのレコード一覧のAPI", () => {
       const records = await client!.record.getRecords({
         app: 1,
         query: "postedAt < NOW()",
+      });
+      expect(records.totalCount).toEqual("1");
+    });
+    test("order byを指定する", async () => {
+      const records = await client!.record.getRecords({
+        app: 1,
+        query: "order by test desc",
+      });
+      expect(records.totalCount).toEqual("2");
+      expect(records.records[0].test.value).toEqual("test2");
+    });
+    test("idを指定する", async () => {
+      const records = await client!.record.getRecords({
+        app: 1,
+        query: "$id = 1",
       });
       expect(records.totalCount).toEqual("1");
     });

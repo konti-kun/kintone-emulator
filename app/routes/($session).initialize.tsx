@@ -9,7 +9,7 @@ export async function action({ params }: ActionFunctionArgs) {
       "CREATE TABLE IF NOT EXISTS fields (id INTEGER PRIMARY KEY, app_id INTEGER, type TEXT, code TEXT unique, label TEXT)",
     );
     db.run(
-      "CREATE TABLE IF NOT EXISTS records (id INTEGER PRIMARY KEY, app_id INTEGER, body JSON)",
+      "CREATE TABLE IF NOT EXISTS records (id INTEGER PRIMARY KEY, revision INTEGER, app_id INTEGER, body JSON)",
     );
   });
 

@@ -47,7 +47,7 @@ const replaceField = (param: { expression: any, fieldTypes: FieldTypes }) => {
   }
 }
 
-const generateRecords = ({ recordResult, fieldTypes, fields }: { recordResult: { id: number, body: string }[], fieldTypes: FieldTypes, fields: string[] }) => {
+const generateRecords = ({ recordResult, fieldTypes, fields }: { recordResult: { id: number, body: string, revision: number }[], fieldTypes: FieldTypes, fields: string[] }) => {
   return recordResult.map((record) => {
     const body = JSON.parse(record.body);
     for (const key in body) {
@@ -60,6 +60,7 @@ const generateRecords = ({ recordResult, fieldTypes, fields }: { recordResult: {
         }
       }
     }
+    body['$revision'] = { value: record.revision.toString(), type: '__REVISION__' };
     body['$id'] = { value: record.id.toString(), type: 'RECORD_NUMBER' };
     return body;
   });
@@ -88,7 +89,7 @@ export const loader = async ({
   const fieldTypes = await getFieldTypes(db, app!);
   if (query === null) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const recordResult = await all<{ body: any, id: number }>(db, `SELECT id, body FROM records WHERE app_id = ?`, app);
+    const recordResult = await all<{ body: any, id: number, revision: number }>(db, `SELECT id, revision, body FROM records WHERE app_id = ?`, app);
     return Response.json({ totalCount: recordResult.length.toString(), records: generateRecords({ recordResult, fieldTypes, fields }) });
 
   }
@@ -107,7 +108,7 @@ export const loader = async ({
   const newQuery = parser.sqlify(ast, { database: 'sqlite' });
   const afterQuery = newQuery.replaceAll('"', '').replace(/SELECT 1 FROM records (WHERE)?/g, '');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recordResult = await all<{ body: any, id: number }>(db, `SELECT id, body FROM records WHERE app_id = ? ${hasWhereClause(query) ? 'and' : ''} ${afterQuery}`, app);
+  const recordResult = await all<{ body: any, id: number, revision: number }>(db, `SELECT id, revision, body FROM records WHERE app_id = ? ${hasWhereClause(query) ? 'and' : ''} ${afterQuery}`, app);
   return Response.json({
     totalCount: recordResult.length.toString(),
     records: generateRecords({ recordResult, fieldTypes, fields }),

@@ -55,6 +55,10 @@ describe("アプリのレコードAPI", () => {
           value: result.id,
           type: "RECORD_NUMBER",
         },
+        $revision: {
+          value: "1",
+          type: "__REVISION__",
+        },
         test: {
           value: "test",
           type: "SINGLE_LINE_TEXT",
@@ -79,6 +83,10 @@ describe("アプリのレコードAPI", () => {
         $id: {
           value: result.id,
           type: "RECORD_NUMBER",
+        },
+        $revision: {
+          value: "2",
+          type: "__REVISION__",
         },
         test: {
           value: "test2",

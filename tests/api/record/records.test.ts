@@ -42,7 +42,7 @@ describe("アプリのレコード一覧のAPI", () => {
     });
   });
 
-  test("アプリのレコードを検索する", async () => {
+  test("アプリのレコードを検索するとデータが返ってくる", async () => {
     const result = await client!.record.addRecord({
       app: 1,
       record: {
@@ -60,14 +60,14 @@ describe("アプリのレコード一覧のAPI", () => {
       },
     });
     expect(result).toEqual({
-      id: expect.any(Number),
+      id: expect.any(String),
       revision: 1,
     });
     const records = await client!.record.getRecords({
       app: 1,
     });
     expect(records.totalCount).toEqual("2");
-    expect(records.records[0]["$id"].value).toEqual(1);
+    expect(records.records[0]["$id"].value).toEqual("1");
     expect(records.records[0].test.value).toEqual("test");
     expect(records.records[0].test.type).toEqual("SINGLE_LINE_TEXT");
   });

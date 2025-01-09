@@ -32,7 +32,7 @@ describe("アプリのレコードAPI", () => {
     });
   });
 
-  test("アプリにレコードを追加し、検索できる", async () => {
+  test("アプリにレコードを追加し、変更し、検索できる", async () => {
     const result = await client!.record.addRecord({
       app: 1,
       record: {
@@ -42,7 +42,7 @@ describe("アプリのレコードAPI", () => {
       },
     });
     expect(result).toEqual({
-      id: expect.any(Number),
+      id: expect.any(String),
       revision: 1,
     });
     const record = await client!.record.getRecord({
@@ -51,8 +51,37 @@ describe("アプリのレコードAPI", () => {
     });
     expect(record).toEqual({
       record: {
+        $id: {
+          value: result.id,
+          type: "RECORD_NUMBER",
+        },
         test: {
           value: "test",
+          type: "SINGLE_LINE_TEXT",
+        },
+      },
+    });
+    await client!.record.updateRecord({
+      app: 1,
+      id: result.id,
+      record: {
+        test: {
+          value: "test2",
+        },
+      },
+    });
+    const updatedRecord = await client!.record.getRecord({
+      app: 1,
+      id: result.id,
+    });
+    expect(updatedRecord).toEqual({
+      record: {
+        $id: {
+          value: result.id,
+          type: "RECORD_NUMBER",
+        },
+        test: {
+          value: "test2",
           type: "SINGLE_LINE_TEXT",
         },
       },

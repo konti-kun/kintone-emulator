@@ -14,23 +14,35 @@ export const loader = async ({
   const url = new URL(request.url);
   const app = url.searchParams.get('app');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recordResult = await all<{ body: any }>(db, `SELECT body FROM records WHERE app_id = ? and id = ?`, app, url.searchParams.get('id'));
+  const recordResult = await all<{ body: any, id: number }>(db, `SELECT id, body FROM records WHERE app_id = ? and id = ?`, app, url.searchParams.get('id'));
   const body: Record = JSON.parse(recordResult[0].body);
+  const id = recordResult[0].id;
   const fieldsResult = await all<{ code: string, type: KintoneRecordField.OneOf['type'] }>(db, `SELECT code, type FROM fields WHERE app_id = ?`, app);
   for (const field of fieldsResult) {
     if (body[field.code]) {
       body[field.code].type = field.type;
     }
   }
+  body['$id'] = { value: id.toString(), type: 'RECORD_NUMBER' };
   return Response.json({ record: body });
 }
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
   const body = await request.json();
   const db = dbSession(params.session);
-  await run(db, "INSERT INTO records (app_id, body) VALUES (?, ?)", body.app, JSON.stringify(body.record));
+  switch (request.method) {
+    case 'POST': {
+      await run(db, "INSERT INTO records (app_id, body) VALUES (?, ?)", body.app, JSON.stringify(body.record));
+      break;
+    }
+    case 'PUT': {
+      await run(db, "UPDATE records SET body = ? WHERE id = ?", JSON.stringify(body.record), body.id);
+      break;
+    }
+  }
+  const recordResult = await all<{ id: number }>(db, `SELECT id FROM records WHERE rowid = last_insert_rowid()`);
   return Response.json({
-    id: 1,
+    id: recordResult[0].id.toString(),
     revision: 1,
   });
 }

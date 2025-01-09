@@ -60,7 +60,7 @@ const generateRecords = ({ recordResult, fieldTypes, fields }: { recordResult: {
         }
       }
     }
-    body['$id'] = { value: record.id, type: 'RECORD_NUMBER' };
+    body['$id'] = { value: record.id.toString(), type: 'RECORD_NUMBER' };
     return body;
   });
 }

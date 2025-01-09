@@ -67,6 +67,7 @@ describe("アプリのレコード一覧のAPI", () => {
       app: 1,
     });
     expect(records.totalCount).toEqual("2");
+    expect(records.records[0]["$id"].value).toEqual(1);
     expect(records.records[0].test.value).toEqual("test");
     expect(records.records[0].test.type).toEqual("SINGLE_LINE_TEXT");
   });

@@ -47,7 +47,7 @@ const replaceField = (param: { expression: any, fieldTypes: FieldTypes }) => {
   }
 }
 
-const generateRecords = ({ recordResult, fieldTypes, fields }: { recordResult: { body: string }[], fieldTypes: FieldTypes, fields: string[] }) => {
+const generateRecords = ({ recordResult, fieldTypes, fields }: { recordResult: { id: number, body: string }[], fieldTypes: FieldTypes, fields: string[] }) => {
   return recordResult.map((record) => {
     const body = JSON.parse(record.body);
     for (const key in body) {
@@ -60,12 +60,15 @@ const generateRecords = ({ recordResult, fieldTypes, fields }: { recordResult: {
         }
       }
     }
+    body['$id'] = { value: record.id, type: 'RECORD_NUMBER' };
     return body;
   });
 }
 
 const hasWhereClause = (query: string) => {
-  return !query.trim().toLowerCase().startsWith('order') && !query.trim().toLowerCase().startsWith('limit') && !query.trim().toLowerCase().startsWith('offset')
+  return !query.trim().toLowerCase().startsWith('order')
+    && !query.trim().toLowerCase().startsWith('limit')
+    && !query.trim().toLowerCase().startsWith('offset')
 }
 
 export const loader = async ({
@@ -85,7 +88,7 @@ export const loader = async ({
   const fieldTypes = await getFieldTypes(db, app!);
   if (query === null) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const recordResult = await all<{ body: any }>(db, `SELECT body FROM records WHERE app_id = ?`, app);
+    const recordResult = await all<{ body: any, id: number }>(db, `SELECT id, body FROM records WHERE app_id = ?`, app);
     return Response.json({ totalCount: recordResult.length.toString(), records: generateRecords({ recordResult, fieldTypes, fields }) });
 
   }
@@ -104,7 +107,7 @@ export const loader = async ({
   const newQuery = parser.sqlify(ast, { database: 'sqlite' });
   const afterQuery = newQuery.replaceAll('"', '').replace(/SELECT 1 FROM records (WHERE)?/g, '');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recordResult = await all<{ body: any }>(db, `SELECT body FROM records WHERE app_id = ? ${hasWhereClause(query) ? 'and' : ''} ${afterQuery}`, app);
+  const recordResult = await all<{ body: any, id: number }>(db, `SELECT id, body FROM records WHERE app_id = ? ${hasWhereClause(query) ? 'and' : ''} ${afterQuery}`, app);
   return Response.json({
     totalCount: recordResult.length.toString(),
     records: generateRecords({ recordResult, fieldTypes, fields }),

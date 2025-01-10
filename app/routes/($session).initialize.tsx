@@ -25,12 +25,24 @@ const CREATE_TABLE_RECORDS = dedent`
   )
 `;
 
+const CREATE_TABLE_FILES = dedent`
+  CREATE TABLE IF NOT EXISTS files (
+    id INTEGER PRIMARY KEY,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    filename TEXT,
+    content_type TEXT,
+    data BLOB
+  )
+`;
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function action({ params }: ActionFunctionArgs) {
   const db = dbSession(params.session);
   await serialize(db, () => {
     db.run(CREATE_TABLE_FIELDS);
     db.run(CREATE_TABLE_RECORDS);
+    db.run(CREATE_TABLE_FILES);
   });
 
   return Response.json({ result: 'ok' });

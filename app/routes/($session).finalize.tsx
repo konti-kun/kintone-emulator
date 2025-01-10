@@ -11,6 +11,9 @@ export async function action({ params }: ActionFunctionArgs) {
     db.run(
       "DROP TABLE records"
     );
+    db.run(
+      "DROP TABLE files"
+    )
   });
 
   return Response.json({ result: 'ok' });

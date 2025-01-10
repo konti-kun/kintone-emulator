@@ -33,7 +33,7 @@ describe("アプリのフォームフィールドAPI", () => {
       },
     });
     expect(result).toEqual({
-      revision: 1,
+      revision: "1",
     });
     const formResult = await client.app.getFormFields({
       app: 1,
@@ -51,6 +51,7 @@ describe("アプリのフォームフィールドAPI", () => {
     });
     expect(await client.app.getFormFields({ app: 1 })).toEqual({
       properties: {},
+      revision: "1",
     });
   });
 });

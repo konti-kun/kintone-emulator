@@ -17,6 +17,9 @@ importers:
       '@remix-run/serve':
         specifier: ^2.15.2
         version: 2.15.2(typescript@5.7.2)
+      dedent:
+        specifier: ^1.5.3
+        version: 1.5.3
       isbot:
         specifier: ^4.1.0
         version: 4.4.0

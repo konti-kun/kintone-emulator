@@ -61,7 +61,7 @@ describe("アプリのレコード一覧のAPI", () => {
     });
     expect(result).toEqual({
       id: expect.any(String),
-      revision: 1,
+      revision: "1",
     });
     const records = await client!.record.getRecords({
       app: 1,

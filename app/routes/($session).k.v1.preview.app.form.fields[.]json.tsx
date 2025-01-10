@@ -1,9 +1,8 @@
 import { ActionFunctionArgs } from "@remix-run/node";
 import { dbSession, serialize } from "~/utils/db.server";
 
-const sql = `
+const insertSql = `
 INSERT INTO fields (app_id, type, code, label) VALUES (?, ?, ?, ?)
-ON CONFLICT(code) DO UPDATE SET label = excluded.label, type = excluded.type
 `
 
 export async function action({
@@ -18,7 +17,7 @@ export async function action({
       const requestData = await request.json();
       await serialize(db, () => {
         for (const key in requestData.properties) {
-          db.run(sql, requestData.app, requestData.properties[key].type, key, requestData.properties.test.label);
+          db.run(insertSql, requestData.app, requestData.properties[key].type, key, requestData.properties.test.label);
         }
       });
       break;
@@ -42,5 +41,5 @@ export async function action({
       break;
     }
   }
-  return Response.json({ revision: 1 });
+  return Response.json({ revision: "1" });
 }

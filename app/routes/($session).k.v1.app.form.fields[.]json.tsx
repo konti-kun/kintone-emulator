@@ -29,5 +29,5 @@ export async function loader({
     };
   }
 
-  return Response.json({ properties });
+  return Response.json({ properties, revision: '1' });
 }

@@ -42,9 +42,9 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       break;
     }
   }
-  const recordResult = await all<{ id: number }>(db, `SELECT id FROM records WHERE rowid = last_insert_rowid()`);
+  const recordResult = await all<{ id: number, revision: number }>(db, `SELECT id,revision FROM records WHERE rowid = last_insert_rowid()`);
   return Response.json({
     id: recordResult[0].id.toString(),
-    revision: 1,
+    revision: recordResult[0].revision.toString(),
   });
 }

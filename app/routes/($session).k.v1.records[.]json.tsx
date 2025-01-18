@@ -76,41 +76,59 @@ export const loader = async ({
   request,
   params,
 }: ActionFunctionArgs) => {
-  const db = dbSession(params.session);
-  const url = new URL(request.url);
-  const app = url.searchParams.get('app');
-  const query = url.searchParams.get('query');
-  const fields: string[] = [];
-  for (const [key, value] of url.searchParams.entries()) {
-    if (key.includes('fields')) {
-      fields.push(value);
+  try {
+    const db = dbSession(params.session);
+    const url = new URL(request.url);
+    const app = url.searchParams.get('app');
+    const query = url.searchParams.get('query');
+    const fields: string[] = [];
+    for (const [key, value] of url.searchParams.entries()) {
+      if (key.includes('fields')) {
+        fields.push(value);
+      }
     }
-  }
-  const fieldTypes = await getFieldTypes(db, app!);
-  if (query === null) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const recordResult = await all<{ body: any, id: number, revision: number }>(db, `SELECT id, revision, body FROM records WHERE app_id = ?`, app);
-    return Response.json({ totalCount: recordResult.length.toString(), records: generateRecords({ recordResult, fieldTypes, fields }) });
+    const fieldTypes = await getFieldTypes(db, app!);
+    if (query === null) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const recordResult = await all<{ body: any, id: number, revision: number }>(db, `SELECT id, revision, body FROM records WHERE app_id = ?`, app);
+      return Response.json({ totalCount: recordResult.length.toString(), records: generateRecords({ recordResult, fieldTypes, fields }) });
 
-  }
-  const parser = new sqlParser.Parser();
-  const prefixSql = `select 1 from records ${hasWhereClause(query) ? 'where ' : ''}`;
-  const ast = parser.astify(prefixSql + query!);
-
-  if ('where' in ast && ast.where !== null) {
-    replaceField({ expression: ast.where, fieldTypes });
-  }
-  if ('orderby' in ast && ast.orderby !== null) {
-    for (const order of ast.orderby) {
-      replaceField({ expression: order.expr, fieldTypes });
     }
+    const parser = new sqlParser.Parser();
+    const prefixSql = `select 1 from records ${hasWhereClause(query) ? 'where ' : ''}`;
+    const ast = parser.astify(prefixSql + query!);
+
+    if ('where' in ast && ast.where !== null) {
+      replaceField({ expression: ast.where, fieldTypes });
+    }
+    if ('orderby' in ast && ast.orderby !== null) {
+      for (const order of ast.orderby) {
+        replaceField({ expression: order.expr, fieldTypes });
+      }
+    }
+    const newQuery = parser.sqlify(ast, { database: 'sqlite' });
+    const afterQuery = newQuery.replaceAll('"', '').replace(/SELECT 1 FROM records (WHERE)?/g, '');
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const recordResult = await all<{ body: any, id: number, revision: number }>(db, `SELECT id, revision, body FROM records WHERE app_id = ? ${hasWhereClause(query) ? 'and' : ''} ${afterQuery}`, app);
+      return Response.json({
+        totalCount: recordResult.length.toString(),
+        records: generateRecords({ recordResult, fieldTypes, fields }),
+      });
+    } catch (e) {
+      return Response.json(
+        {
+          id: '1505999166-897850006',
+          code: 'CB_VA01',
+          message: 'query: クエリ記法が間違っています。'
+
+        }, { status: 400 });
+    }
+  } catch (e) {
+    return Response.json({
+      id: 'test',
+      code: 'error',
+      message: e
+    }, { status: 500 });
   }
-  const newQuery = parser.sqlify(ast, { database: 'sqlite' });
-  const afterQuery = newQuery.replaceAll('"', '').replace(/SELECT 1 FROM records (WHERE)?/g, '');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recordResult = await all<{ body: any, id: number, revision: number }>(db, `SELECT id, revision, body FROM records WHERE app_id = ? ${hasWhereClause(query) ? 'and' : ''} ${afterQuery}`, app);
-  return Response.json({
-    totalCount: recordResult.length.toString(),
-    records: generateRecords({ recordResult, fieldTypes, fields }),
-  });
 }

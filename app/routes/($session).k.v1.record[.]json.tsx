@@ -30,7 +30,7 @@ export const loader = async ({
 }
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
-  const body = await request.json();
+  const body: { record: { [key: string]: { value: string } }, id?: number, app: number | string, updateKey?: { field: string, value: string } } = await request.json();
   const db = dbSession(params.session);
   switch (request.method) {
     case 'POST': {
@@ -38,11 +38,19 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       break;
     }
     case 'PUT': {
-      await run(db, "UPDATE records SET body = ?, revision = revision + 1 WHERE id = ?", JSON.stringify(body.record), body.id);
+      if (body.id) {
+        const targetRecord = await all<{ body: string }>(db, `SELECT body FROM records WHERE app_id = ? AND id = ?`, body.app, body.id);
+        const recordBody = { ...JSON.parse(targetRecord[0].body), ...body.record };
+        await run(db, "UPDATE records SET body = ?, revision = revision + 1 WHERE id = ?", JSON.stringify(recordBody), body.id);
+      } else if (body.updateKey) {
+        const targetRecord = await all<{ body: string }>(db, `SELECT body FROM records WHERE app_id = ? AND body->>'$.${body.updateKey.field}.value' = ?`, body.app, body.updateKey.value);
+        const recordBody = { ...JSON.parse(targetRecord[0].body), ...body.record };
+        await run(db, `UPDATE records SET body = ?, revision = revision + 1 WHERE app_id = ? AND body->>'$.${body.updateKey.field}.value' = ?`, JSON.stringify(recordBody), body.app, body.updateKey.value);
+      }
       break;
     }
   }
-  const recordResult = await all<{ id: number, revision: number }>(db, `SELECT id,revision FROM records WHERE rowid = last_insert_rowid()`);
+  const recordResult = await all<{ id: number, revision: number, body: unknown }>(db, `SELECT id,revision,body FROM records WHERE rowid = last_insert_rowid()`);
   return Response.json({
     id: recordResult[0].id.toString(),
     revision: recordResult[0].revision.toString(),

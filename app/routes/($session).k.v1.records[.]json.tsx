@@ -67,9 +67,14 @@ const generateRecords = ({ recordResult, fieldTypes, fields }: { recordResult: {
 }
 
 const hasWhereClause = (query: string) => {
-  return !query.trim().toLowerCase().startsWith('order')
-    && !query.trim().toLowerCase().startsWith('limit')
-    && !query.trim().toLowerCase().startsWith('offset')
+  return !(query.trim().toLowerCase().startsWith('order by')
+    || query.trim().toLowerCase().startsWith('limit ')
+    || query.trim().toLowerCase().startsWith('offset '))
+}
+
+const replaceUniCodeField = (query: string) => {
+  const includedJp = /(?<!['"\u30a0-\u30ff\u3040-\u309f\u3005-\u3006\u30e0-\u9fcf])\w*[\u30a0-\u30ff\u3040-\u309f\u3005-\u3006\u30e0-\u9fcf]+\w*(?!['"])/g;
+  return query.replace(includedJp, (match) => `\`${match}\``)
 }
 
 export const loader = async ({
@@ -80,7 +85,8 @@ export const loader = async ({
     const db = dbSession(params.session);
     const url = new URL(request.url);
     const app = url.searchParams.get('app');
-    const query = url.searchParams.get('query');
+    const _query = url.searchParams.get('query');
+    const query = _query ? replaceUniCodeField(_query).replaceAll('"', "'") : null;
     const fields: string[] = [];
     for (const [key, value] of url.searchParams.entries()) {
       if (key.includes('fields')) {
@@ -96,6 +102,8 @@ export const loader = async ({
     }
     const parser = new sqlParser.Parser();
     const prefixSql = `select 1 from records ${hasWhereClause(query) ? 'where ' : ''}`;
+
+    console.log(prefixSql + query!);
     const ast = parser.astify(prefixSql + query!);
 
     if ('where' in ast && ast.where !== null) {
@@ -125,6 +133,7 @@ export const loader = async ({
         }, { status: 400 });
     }
   } catch (e) {
+    console.error(e);
     return Response.json({
       id: 'test',
       code: 'error',

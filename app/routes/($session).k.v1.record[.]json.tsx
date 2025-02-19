@@ -41,10 +41,12 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       if (body.id) {
         const targetRecord = await all<{ body: string }>(db, `SELECT body FROM records WHERE app_id = ? AND id = ?`, body.app, body.id);
         const recordBody = { ...JSON.parse(targetRecord[0].body), ...body.record };
-        await run(db, "UPDATE records SET body = ?, revision = revision + 1 WHERE app_id = ? AND id = ?", JSON.stringify(recordBody), body.id);
+        await run(db, "UPDATE records SET body = ?, revision = revision + 1 WHERE app_id = ? AND id = ?", JSON.stringify(recordBody), body.app, body.id);
       } else if (body.updateKey) {
         const query = `SELECT body FROM records WHERE app_id = ? AND body->>'$.${body.updateKey.field}.value' = ?`;
+        console.log(query);
         const targetRecord = await all<{ body: string }>(db, query, body.app, body.updateKey.value);
+        console.log(targetRecord);
         const recordBody = { ...JSON.parse(targetRecord[0].body), ...body.record };
         await run(db, `UPDATE records SET body = ?, revision = revision + 1 WHERE app_id = ? AND body->>'$.${body.updateKey.field}.value' = ?`, JSON.stringify(recordBody), body.app, body.updateKey.value);
       }

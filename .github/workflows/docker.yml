@@ -23,5 +23,5 @@ jobs:
           .
       - name: Push Docker Image
         run: |
-          docker push ghcr.io/$GITHUB_ACTOR/kintone-emulator:latest
+          docker push ghcr.io/$GITHUB_ACTOR/kintone-emulator
           docker push ghcr.io/$GITHUB_ACTOR/kintone-emulator:$(echo $GITHUB_SHA | head -c7)

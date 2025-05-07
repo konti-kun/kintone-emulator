@@ -69,7 +69,10 @@ function handleBotRequest(
               new Response(stream, {
                 headers: responseHeaders,
                 status: responseStatusCode,
-              })
+              }),
+              {
+                origin: true,
+              }
             )
           );
 
@@ -122,7 +125,10 @@ function handleBrowserRequest(
               new Response(stream, {
                 headers: responseHeaders,
                 status: responseStatusCode,
-              })
+              }),
+              {
+                origin: true,
+              }
             )
           );
 

@@ -23,5 +23,8 @@ export default defineConfig({
   ],
   server: {
     port: 12345,
+    cors: {
+      preflightContinue: true,
+    },
   },
 });

@@ -24,6 +24,8 @@ export default defineConfig({
   server: {
     port: 12345,
     cors: {
+      origin: "*",
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       preflightContinue: true,
     },
   },

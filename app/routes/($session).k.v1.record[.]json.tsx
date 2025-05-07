@@ -7,6 +7,17 @@ type Record = {
 };
 
 export const loader = async ({ request, params }: ActionFunctionArgs) => {
+  if (request.method !== "GET") {
+    // corsを許可するresponseを返す
+    return new Response("ok", {
+      status: 203,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+      },
+    });
+  }
   const db = dbSession(params.session);
   const url = new URL(request.url);
   const app = url.searchParams.get("app");

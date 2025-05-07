@@ -8,6 +8,8 @@ import { PassThrough } from "node:stream";
 
 import type { AppLoadContext, EntryContext } from "@remix-run/node";
 import { createReadableStreamFromReadable } from "@remix-run/node";
+import { cors } from "remix-utils/cors";
+
 import { RemixServer } from "@remix-run/react";
 import { isbot } from "isbot";
 import { renderToPipeableStream } from "react-dom/server";
@@ -62,10 +64,13 @@ function handleBotRequest(
           responseHeaders.set("Content-Type", "text/html");
 
           resolve(
-            new Response(stream, {
-              headers: responseHeaders,
-              status: responseStatusCode,
-            })
+            cors(
+              request,
+              new Response(stream, {
+                headers: responseHeaders,
+                status: responseStatusCode,
+              })
+            )
           );
 
           pipe(body);
@@ -112,10 +117,13 @@ function handleBrowserRequest(
           responseHeaders.set("Content-Type", "text/html");
 
           resolve(
-            new Response(stream, {
-              headers: responseHeaders,
-              status: responseStatusCode,
-            })
+            cors(
+              request,
+              new Response(stream, {
+                headers: responseHeaders,
+                status: responseStatusCode,
+              })
+            )
           );
 
           pipe(body);

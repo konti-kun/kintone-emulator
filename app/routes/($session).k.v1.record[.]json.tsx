@@ -7,6 +7,10 @@ type Record = {
 };
 
 export const loader = async ({ request, params }: ActionFunctionArgs) => {
+  if (request.method !== "GET") {
+    console.log("method", request.method);
+    return new Response("ok", { status: 200 });
+  }
   const db = dbSession(params.session);
   const url = new URL(request.url);
   const app = url.searchParams.get("app");

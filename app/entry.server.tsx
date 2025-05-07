@@ -71,7 +71,7 @@ function handleBotRequest(
                 status: responseStatusCode,
               }),
               {
-                origin: true,
+                origin: false,
               }
             )
           );
@@ -127,7 +127,7 @@ function handleBrowserRequest(
                 status: responseStatusCode,
               }),
               {
-                origin: true,
+                origin: false,
               }
             )
           );

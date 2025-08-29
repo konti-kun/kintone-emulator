@@ -378,14 +378,16 @@ const route3 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProper
   __proto__: null,
   loader: loader$2
 }, Symbol.toStringTag, { value: "Module" }));
-const loader$1 = async ({
-  request,
-  params
-}) => {
+const loader$1 = async ({ request, params }) => {
   const db = dbSession(params.session);
   const url = new URL(request.url);
   const app = url.searchParams.get("app");
-  const recordResult = await all(db, `SELECT id, revision, body FROM records WHERE app_id = ? and id = ?`, app, url.searchParams.get("id"));
+  const recordResult = await all(
+    db,
+    `SELECT id, revision, body FROM records WHERE app_id = ? and id = ?`,
+    app,
+    url.searchParams.get("id")
+  );
   const body = JSON.parse(recordResult[0].body);
   const id = recordResult[0].id;
   const revision = recordResult[0].revision;
@@ -397,33 +399,80 @@ const loader$1 = async ({
   }
   body["$id"] = { value: id.toString(), type: "RECORD_NUMBER" };
   body["$revision"] = { value: revision.toString(), type: "__REVISION__" };
-  return Response.json({ record: body });
+  return Response.json(
+    { record: body },
+    {
+      headers: {
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "*"
+      }
+    }
+  );
 };
 const action$3 = async ({ request, params }) => {
   const body = await request.json();
+  console.log("action", body);
+  console.log("method", request.method);
   const db = dbSession(params.session);
   switch (request.method) {
     case "POST": {
-      await run(db, "INSERT INTO records (app_id, revision, body) VALUES (?, 1, ?)", body.app, JSON.stringify(body.record));
+      await run(
+        db,
+        "INSERT INTO records (app_id, revision, body) VALUES (?, 1, ?)",
+        body.app,
+        JSON.stringify(body.record)
+      );
       break;
     }
     case "PUT": {
       if (body.id) {
-        const targetRecord = await all(db, `SELECT body FROM records WHERE app_id = ? AND id = ?`, body.app, body.id);
-        const recordBody = { ...JSON.parse(targetRecord[0].body), ...body.record };
-        await run(db, "UPDATE records SET body = ?, revision = revision + 1 WHERE app_id = ? AND id = ?", JSON.stringify(recordBody), body.app, body.id);
+        const targetRecord = await all(
+          db,
+          `SELECT body FROM records WHERE app_id = ? AND id = ?`,
+          body.app,
+          body.id
+        );
+        const recordBody = {
+          ...JSON.parse(targetRecord[0].body),
+          ...body.record
+        };
+        await run(
+          db,
+          "UPDATE records SET body = ?, revision = revision + 1 WHERE app_id = ? AND id = ?",
+          JSON.stringify(recordBody),
+          body.app,
+          body.id
+        );
       } else if (body.updateKey) {
         const query = `SELECT body FROM records WHERE app_id = ? AND body->>'$.${body.updateKey.field}.value' = ?`;
         console.log(query);
-        const targetRecord = await all(db, query, body.app, body.updateKey.value);
+        const targetRecord = await all(
+          db,
+          query,
+          body.app,
+          body.updateKey.value
+        );
         console.log(targetRecord);
-        const recordBody = { ...JSON.parse(targetRecord[0].body), ...body.record };
-        await run(db, `UPDATE records SET body = ?, revision = revision + 1 WHERE app_id = ? AND body->>'$.${body.updateKey.field}.value' = ?`, JSON.stringify(recordBody), body.app, body.updateKey.value);
+        const recordBody = {
+          ...JSON.parse(targetRecord[0].body),
+          ...body.record
+        };
+        await run(
+          db,
+          `UPDATE records SET body = ?, revision = revision + 1 WHERE app_id = ? AND body->>'$.${body.updateKey.field}.value' = ?`,
+          JSON.stringify(recordBody),
+          body.app,
+          body.updateKey.value
+        );
       }
       break;
     }
   }
-  const recordResult = await all(db, `SELECT id,revision,body FROM records WHERE rowid = last_insert_rowid()`);
+  const recordResult = await all(
+    db,
+    `SELECT id,revision,body FROM records WHERE rowid = last_insert_rowid()`
+  );
   return Response.json({
     id: recordResult[0].id.toString(),
     revision: recordResult[0].revision.toString()

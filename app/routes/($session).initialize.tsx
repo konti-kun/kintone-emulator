@@ -25,6 +25,18 @@ const CREATE_TABLE_RECORDS = dedent`
   )
 `;
 
+const CREATE_TABLE_COMMENTS = dedent`
+  CREATE TABLE IF NOT EXISTS comments (
+    id INTEGER PRIMARY KEY,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    app_id INTEGER,
+    record_id INTEGER,
+    message TEXT,
+    mentions JSON
+  )
+`;
+
 const CREATE_TABLE_FILES = dedent`
   CREATE TABLE IF NOT EXISTS files (
     id INTEGER PRIMARY KEY,
@@ -42,8 +54,9 @@ export async function action({ params }: ActionFunctionArgs) {
   await serialize(db, () => {
     db.run(CREATE_TABLE_FIELDS);
     db.run(CREATE_TABLE_RECORDS);
+    db.run(CREATE_TABLE_COMMENTS);
     db.run(CREATE_TABLE_FILES);
   });
 
-  return Response.json({ result: 'ok' });
+  return Response.json({ result: "ok" });
 }

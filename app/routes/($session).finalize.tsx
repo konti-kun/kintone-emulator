@@ -5,16 +5,11 @@ import { dbSession, serialize } from "~/utils/db.server";
 export async function action({ params }: ActionFunctionArgs) {
   const db = dbSession(params.session);
   await serialize(db, () => {
-    db.run(
-      "DROP TABLE fields",
-    );
-    db.run(
-      "DROP TABLE records"
-    );
-    db.run(
-      "DROP TABLE files"
-    )
+    db.run("DROP TABLE fields");
+    db.run("DROP TABLE records");
+    db.run("DROP TABLE comments");
+    db.run("DROP TABLE files");
   });
 
-  return Response.json({ result: 'ok' });
+  return Response.json({ result: "ok" });
 }
